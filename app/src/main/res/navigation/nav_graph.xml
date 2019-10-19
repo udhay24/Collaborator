@@ -9,5 +9,14 @@
         android:id="@+id/issuesListFragment"
         android:name="com.collaborator.android.IssuesListFragment"
         android:label="fragment_issues_list"
-        tools:layout="@layout/fragment_issues_list" />
+        tools:layout="@layout/fragment_issues_list" >
+        <action
+            android:id="@+id/action_issuesListFragment_to_addIssueFragment"
+            app:destination="@id/addIssueFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addIssueFragment"
+        android:name="com.collaborator.android.AddIssueFragment"
+        android:label="fragment_add_issue"
+        tools:layout="@layout/fragment_add_issue" />
 </navigation>

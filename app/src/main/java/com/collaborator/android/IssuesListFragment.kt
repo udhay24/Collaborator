@@ -7,6 +7,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import androidx.navigation.fragment.findNavController
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_issues_list.*
 
@@ -29,7 +31,7 @@ class IssuesListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val data = db.collection("issues")
+        db.collection("issues")
             .get()
             .addOnSuccessListener { result ->
                 for (document in result) {
@@ -38,9 +40,10 @@ class IssuesListFragment : Fragment() {
 //                addNewEntry(result.documents[0].data!!)
                 issues_recycler_view.adapter = IssuesAdapter(issuesList)
             }
-            .addOnFailureListener { exception ->
-                Log.w("Main", "Error getting documents.", exception)
-            }
+
+        add_issue_button.setOnClickListener {
+            findNavController().navigate(R.id.action_issuesListFragment_to_addIssueFragment)
+        }
     }
 
     private fun addNewEntry(map: Map<String, Any>) {

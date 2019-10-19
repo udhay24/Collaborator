@@ -12,12 +12,18 @@ import kotlinx.android.synthetic.main.fragment_add_issue.*
 import com.nguyenhoanglam.imagepicker.ui.imagepicker.ImagePicker
 import android.app.Activity.RESULT_OK
 import android.net.Uri
+import androidx.lifecycle.Observer
+import com.collaborator.android.location.NativeLocationFragment
 import com.nguyenhoanglam.imagepicker.model.Config
 import com.nguyenhoanglam.imagepicker.model.Image
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
-class AddIssueFragment : Fragment() {
+class AddIssueFragment : NativeLocationFragment() {
 
     var storage = FirebaseStorage.getInstance()
     val storageRef = storage.reference
@@ -28,6 +34,7 @@ class AddIssueFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
+        updateLocation()
         return inflater.inflate(R.layout.fragment_add_issue, container, false)
     }
 
@@ -44,12 +51,21 @@ class AddIssueFragment : Fragment() {
             locality_spinner.adapter = adapter
         }
 
-        select_image_button.setOnClickListener {
-//            val intent = Intent()
-//            intent.type = "image/*"
-//            intent.action = Intent.ACTION_GET_CONTENT
-//            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE)
+        locationLiveData.observe(this, Observer {
+            CoroutineScope(Dispatchers.Unconfined).launch {
+                it.oneOf(fnS = {
+                    withContext(Dispatchers.Main) {
+                        location_text_view.text = "${it.longitude} N / ${it.latitude} E"
+                    }
+                }, fnF = {
+                    withContext(Dispatchers.Main) {
+                        location_text_view.text = "Cannot identify location"
+                    }
+                })
+            }
+        })
 
+        select_image_button.setOnClickListener {
             ImagePicker.with(this)                         //  Initialize ImagePicker with activity or fragment context
                 .setToolbarColor("#212121")         //  Toolbar color
                 .setStatusBarColor("#000000")       //  StatusBar color (works with SDK >= 21  )
@@ -72,6 +88,8 @@ class AddIssueFragment : Fragment() {
                 .setKeepScreenOn(true)              //  Keep screen on when selecting images
                 .start()
         }
+
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

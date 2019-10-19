@@ -2,7 +2,6 @@ package com.collaborator.android
 
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -10,15 +9,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.fragment_add_issue.*
-import android.provider.MediaStore
-import android.widget.Toast
 import com.nguyenhoanglam.imagepicker.ui.imagepicker.ImagePicker
-import android.R.attr.data
 import android.app.Activity.RESULT_OK
+import android.net.Uri
 import com.nguyenhoanglam.imagepicker.model.Config
 import com.nguyenhoanglam.imagepicker.model.Image
+import com.google.firebase.storage.FirebaseStorage
+import java.io.File
 
 class AddIssueFragment : Fragment() {
+
+    var storage = FirebaseStorage.getInstance()
+    val storageRef = storage.reference
+    private val selectedImageUrl: MutableList<String> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,7 +44,7 @@ class AddIssueFragment : Fragment() {
             locality_spinner.adapter = adapter
         }
 
-        select_image.setOnClickListener {
+        select_image_button.setOnClickListener {
 //            val intent = Intent()
 //            intent.type = "image/*"
 //            intent.action = Intent.ACTION_GET_CONTENT
@@ -74,10 +77,32 @@ class AddIssueFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == Config.RC_PICK_IMAGES && resultCode == RESULT_OK && data != null) {
-            val assets: List<Image>? = data.getParcelableArrayListExtra(Config.EXTRA_IMAGES)
-            Toast.makeText(requireContext(), "${assets?.size?:0}", Toast.LENGTH_LONG).show()
-            // Assets can be of type Image or Video, filter them here if needed, so your have a list of Images for example.
-            // do your logic here...
+            val assets: List<Image> = data.getParcelableArrayListExtra(Config.EXTRA_IMAGES)!!
+            val adapter = ImageAdapter(listOf())
+            selected_images_recycler_view.adapter = adapter
+            for (asset in assets) {
+                val file = Uri.fromFile(File(asset.path))
+                adapter.addNewItem(file)
+                val riversRef = storageRef.child("images/${file.lastPathSegment}.jpg")
+                val uploadTask = riversRef.putFile(file)
+                uploadTask.continueWithTask { task ->
+                    if (!task.isSuccessful) {
+                        task.exception?.let {
+                            throw it
+                        }
+                    }
+                    riversRef.downloadUrl
+                }.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val downloadUri = task.result
+                        selectedImageUrl.add(downloadUri.toString())
+                    } else {
+                        // Handle failures
+                        // ...
+                    }
+                }
+
+            }
         }
     }
 

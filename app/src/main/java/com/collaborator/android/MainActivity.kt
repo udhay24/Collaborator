@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 for (document in result) {
-                    Toast.makeText(this.applicationContext, document.data.toString(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this.applicationContext, convertToIssueModel(document).toString(), Toast.LENGTH_LONG).show()
                     Log.d("Main", "${document.id} => ${document.data}")
                 }
             }
